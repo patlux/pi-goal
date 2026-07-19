@@ -33,7 +33,7 @@ pi install git:github.com/Michaelliv/pi-goal
 
 When a goal is active, the extension shows compact visible lifecycle markers like `Goal active` and `Goal continuing`; expand them with `ctrl+o` to inspect the objective and usage. The full continuation instructions ride along as the content of that custom message, so the model always has the objective and audit guidance in the transcript while the renderer keeps the visible UI compact.
 
-The same Pi agent keeps running normal turns in the same session context until it calls `update_goal({ status: "complete" })`, the user pauses/clears it, or the token budget is reached. Reloading Pi pauses an active goal instead of silently resuming it; use `/goal resume` to continue.
+The same Pi agent keeps running normal turns in the same session context until it calls `update_goal({ status: "complete" })`, the user pauses/clears it, or the token budget is reached. Goal continuation waits for Pi to finish automatic retry and context-compaction recovery. If the provider run still settles with an error or is aborted, the goal pauses fail-closed instead of repeatedly submitting the same request; resolve the provider/context problem, compact or switch models if needed, then use `/goal resume`. Reloading Pi also pauses an active goal instead of silently resuming it.
 
 ## What it adds
 
@@ -59,7 +59,9 @@ The same Pi agent keeps running normal turns in the same session context until i
   -> deliver continuation instructions as the marker's message content
   -> trigger an agent turn
   -> account time/tokens on turn_end
-  -> queue another continuation on agent_end while active
+  -> wait for agent_settled after retries/compaction
+  -> queue another continuation only after a successful settled run
+  -> pause fail-closed after a settled provider error or abort
   -> stop when update_goal marks complete, user pauses/clears, or budget is hit
 ```
 

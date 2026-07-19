@@ -11,3 +11,14 @@ test("persisting a non-active goal cancels any queued continuation", () => {
 		/if \(next\?\.status !== "active"\) \{\s*continuationQueued = false;\s*\}/,
 	);
 });
+
+test("goal continuation waits for Pi retry and compaction recovery to settle", () => {
+	assert.match(indexSource, /pi\.on\("agent_settled"/);
+	assert.doesNotMatch(indexSource, /pi\.on\("agent_end"/);
+});
+
+test("settled provider errors pause the goal without queueing another turn", () => {
+	assert.match(indexSource, /shouldPauseGoalAfterSettled\(outcome\)/);
+	assert.match(indexSource, /status: "paused" as const/);
+	assert.match(indexSource, /compact or switch models if needed/);
+});

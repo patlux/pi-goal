@@ -13,6 +13,12 @@ import {
 	type GoalStatus,
 	normalizeTokenBudget,
 } from "./goal-state";
+import {
+	assistantOutcome,
+	shouldContinueGoalAfterSettled,
+	shouldPauseGoalAfterSettled,
+	type AssistantOutcome,
+} from "./continuation";
 import { tokenDeltaFromUsage, type UsageSnapshot } from "./usage";
 
 const CUSTOM_TYPE = "pi-goal";
@@ -23,6 +29,7 @@ let statusBarEnabled = true;
 let activeTurnStartedAt: number | null = null;
 let activeGoalThisTurnId: string | null = null;
 let continuationQueued = false;
+let settledAssistantOutcome: AssistantOutcome | null = null;
 
 // The `content` field is what the LLM sees in the conversation history.
 // Every goal event MUST carry actionable text — never a cryptic marker.
@@ -380,6 +387,7 @@ export default function piGoal(pi: ExtensionAPI) {
 		continuationQueued = false;
 		activeTurnStartedAt = null;
 		activeGoalThisTurnId = null;
+		settledAssistantOutcome = null;
 		// Keep create_goal available, and hide read/update tools unless there is an active goal to pursue.
 		syncGoalTools(pi);
 		if (goal?.status === "active" && event.reason === "reload") {
@@ -412,6 +420,8 @@ export default function piGoal(pi: ExtensionAPI) {
 	});
 
 	pi.on("turn_end", (event, ctx) => {
+		const message = event.message;
+		settledAssistantOutcome = assistantOutcome(message.role, message.role === "assistant" ? message.stopReason : undefined);
 		if (!goal || activeGoalThisTurnId !== goal.id) {
 			activeTurnStartedAt = null;
 			activeGoalThisTurnId = null;
@@ -428,8 +438,19 @@ export default function piGoal(pi: ExtensionAPI) {
 		}
 	});
 
-	pi.on("agent_end", (_event, ctx) => {
+	pi.on("agent_settled", (_event, ctx) => {
+		const outcome = settledAssistantOutcome;
+		settledAssistantOutcome = null;
 		if (!goal || goal.status !== "active" || ctx.hasPendingMessages()) return;
-		queueContinuation(pi, goal);
+		if (shouldPauseGoalAfterSettled(outcome)) {
+			const paused = { ...goal, status: "paused" as const, updatedAt: Date.now() };
+			persist(pi, ctx, paused);
+			ctx.ui.notify(
+				`‖ Goal paused after provider ${outcome}. Resolve the provider/context issue, compact or switch models if needed, then use /goal resume.`,
+				"warning",
+			);
+			return;
+		}
+		if (shouldContinueGoalAfterSettled(outcome)) queueContinuation(pi, goal);
 	});
 }
