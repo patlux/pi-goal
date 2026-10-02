@@ -1,9 +1,15 @@
+import type { UserContext } from "./goal-context";
+
 export type GoalStatus = "active" | "paused" | "budget_limited" | "complete";
 
 export type GoalState = {
 	version: 1;
 	id: string;
 	objective: string;
+	objectiveSource?: "user" | "agent";
+	userContext?: UserContext[];
+	contextOmitted?: boolean;
+	pause?: { origin: "user" | "agent" | "provider" | "reload"; at: number };
 	status: GoalStatus;
 	tokenBudget: number | null;
 	tokensUsed: number;

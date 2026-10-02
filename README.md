@@ -69,6 +69,13 @@ The same Pi agent keeps running normal turns in the same session context until i
 
 The model is instructed to audit completion against real evidence before calling `update_goal`. The `update_goal` tool deliberately accepts only `status: "complete"`; pausing, resuming, clearing, and budget limiting are controlled by the user or extension runtime. The final turn is still accounted even when the model completes the goal mid-turn.
 
+## Provenance and authorization
+
+Goal and pause origins are recorded separately from task text. Original scoped
+user inputs and their referents survive compaction and reload without becoming
+blanket grants. See [autonomy and provenance](docs/autonomy.md) for limits,
+revocation, legacy-state behavior, verification and activation.
+
 ## State
 
 Goal state is stored as Pi custom session entries with `customType: "pi-goal"`. It follows the active session branch, survives reloads, and does not require an external database.

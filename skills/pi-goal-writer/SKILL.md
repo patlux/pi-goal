@@ -48,7 +48,7 @@ For Pi token budgets:
 
 ## Writing standards
 
-Make the goal self-contained. It should survive context compaction and continuation turns. Include exact command names when known, but do not invent commands. Say “run the relevant project checks identified in AGENTS.md/package scripts” only when exact commands are unknown and the agent can inspect them.
+Make the goal self-contained. It should survive context compaction and continuation turns. Preserve the provenance of constraints: distinguish explicit user requirements, applicable policy, and agent implementation choices. Do not add speculative approval gates or promote your own precautions into user prohibitions. Carry forward existing scoped authorization and its limits; a goal is not a new source of permission. Include exact command names when known, but do not invent commands. Say “run the relevant project checks identified in AGENTS.md/package scripts” only when exact commands are unknown and the agent can inspect them.
 
 Make completion evidence-based. The goal should require the agent to inspect real artifacts before declaring success: files changed, tests passed, benchmark numbers, rendered screenshots, logs, PR checks, or a written audit. Do not let “tests pass” be the only evidence unless the tests actually cover every requirement.
 
@@ -56,7 +56,7 @@ Bound the scope. Name excluded directories or behaviors when important, such as 
 
 Preserve honesty under uncertainty. If evidence may be unavailable, require a final report that separates confirmed findings, approximate/proxy evidence, blocked claims, and remaining uncertainty.
 
-Prefer concrete stop language: “If blocked, stop with the exact blocker and what would unlock progress.” Avoid weak endings like “do your best.”
+Prefer concrete stop language: “If blocked, stop with the exact blocker and what would unlock progress.” Avoid weak endings like “do your best.” Identify essential runtime/dependency/permission gates early and exercise the smallest authorized end-to-end path before investing in broad portable scaffolding. Before declaring a permission blocker, check the original request, existing scoped approvals, and the exact applicable policy; technical uncertainty is not missing authorization.
 
 ## Review checklist
 
